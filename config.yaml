@@ -1,0 +1,31 @@
+# Configura tus métricas acá.
+# alert_if acepta cualquier expresión con 'value': "value < 100", "value > 99", etc.
+
+database:
+  type: postgresql
+  host: localhost
+  port: 5432
+  dbname: mi_base
+  user: mi_usuario
+  # password va en .env como DB_PASSWORD
+
+metrics:
+  - name: ventas_del_dia
+    query: >
+      SELECT COALESCE(SUM(amount), 0)
+      FROM orders
+      WHERE DATE(created_at) = CURRENT_DATE
+    alert_if: "value < 10000"
+    description: "Ventas totales de hoy"
+
+  - name: tasa_conversion
+    query: >
+      SELECT ROUND(
+        COUNT(CASE WHEN status = 'converted' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2
+      ) FROM leads WHERE DATE(created_at) = CURRENT_DATE
+    alert_if: "value < 5.0"
+    description: "% de leads que convierten"
+
+alerts:
+  slack_webhook: ${SLACK_WEBHOOK_URL}
+  email: tucorreo@gmail.com
